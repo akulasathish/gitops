@@ -1,7 +1,22 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Resources:
 
-  # EC2 Instance in your existing VPC and Subnet
+  # New Security Group for EC2 instance
+  MyNewSecurityGroup:
+    Type: 'AWS::EC2::SecurityGroup'
+    Properties:
+      GroupDescription: Enable HTTP and SSH access
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: '80'
+          ToPort: '80'
+          CidrIp: '0.0.0.0/0'  # Allow HTTP access from anywhere
+        - IpProtocol: tcp
+          FromPort: '22'
+          ToPort: '22'
+          CidrIp: '0.0.0.0/0'  # Allow SSH access from anywhere (this can be restricted further for security)
+  
+  # EC2 Instance with the new security group
   MyEC2Instance:
     Type: 'AWS::EC2::Instance'
     Properties:
@@ -9,7 +24,7 @@ Resources:
       KeyName: MANDEEP-KEY  # Replace with your actual EC2 key pair name
       ImageId: ami-0d68d8cc09feec3b1  # Ensure this is a valid AMI for your region
       SecurityGroups:
-        - Ref: MySecurityGroup
+        - Ref: MyNewSecurityGroup  # Reference the new security group
       SubnetId: subnet-0b35aad6e0809e70a  # Use your provided subnet ID
       NetworkInterfaces:
         - AssociatePublicIpAddress: true  # Ensure public IP is assigned
@@ -17,17 +32,6 @@ Resources:
       Tags:
         - Key: Name
           Value: SimpleHTMLApp
-
-  # Security Group for the EC2 instance
-  MySecurityGroup:
-    Type: 'AWS::EC2::SecurityGroup'
-    Properties:
-      GroupDescription: Enable HTTP access on port 80
-      SecurityGroupIngress:
-        - IpProtocol: tcp
-          FromPort: '80'
-          ToPort: '80'
-          CidrIp: '0.0.0.0/0'
 
 Outputs:
   EC2InstancePublicIP:
