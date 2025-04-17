@@ -1,23 +1,22 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Resources:
 
+  # EC2 Instance using existing security group
   MyEC2Instance:
     Type: 'AWS::EC2::Instance'
     Properties:
       InstanceType: t2.micro
-      KeyName: MANDEEP-KEY
-      ImageId: ami-0d68d8cc09feec3b1
+      KeyName: MANDEEP-KEY  # Replace with your EC2 key pair name
+      ImageId: ami-0d68d8cc09feec3b1  # Valid AMI for your region
+      SubnetId: subnet-0b35aad6e0809e70a  # Your subnet ID
       SecurityGroupIds:
-        - "sg-08bdfc852e142b299"
-      SubnetId: subnet-0b35aad6e0809e70a
+        - sg-08bdfc852e142b299  # Existing security group ID
       Tags:
         - Key: Name
           Value: SimpleHTMLApp
+      # Assign public IP through subnet's auto-assign setting or Elastic IP
 
 Outputs:
-  EC2InstancePublicIP:
-    Description: 'Public IP of the EC2 instance'
-    Value: !GetAtt MyEC2Instance.PublicIp
   WebsiteURL:
-    Value: !Sub 'http://${MyEC2Instance.PublicDnsName}'
     Description: 'URL to access the HTML app on EC2'
+    Value: !Sub 'http://${MyEC2Instance.PublicDnsName}'
