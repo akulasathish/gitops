@@ -1,11 +1,11 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Resources:
 
-  # New Security Group for EC2 instance
+  # Use existing Security Group
   MyNewSecurityGroup:
     Type: 'AWS::EC2::SecurityGroup'
     Properties:
-      GroupDescription: Enable HTTP and SSH access
+      GroupDescription: "Allow HTTP and SSH access"
       SecurityGroupIngress:
         - IpProtocol: tcp
           FromPort: '80'
@@ -14,7 +14,10 @@ Resources:
         - IpProtocol: tcp
           FromPort: '22'
           ToPort: '22'
-          CidrIp: '0.0.0.0/0'  # Allow SSH access from anywhere (this can be restricted to your IP for security)
+          CidrIp: '0.0.0.0/0'  # Allow SSH access from anywhere
+      GroupName: "gitops"  # Existing Security Group name
+      SecurityGroupId: "sg-08bdfc852e142b299"  # Existing Security Group ID
+      VpcId: "vpc-06a1a4fad9ed4d62b"  # Your provided VPC ID
   
   # EC2 Instance with the new security group
   MyEC2Instance:
@@ -22,10 +25,10 @@ Resources:
     Properties:
       InstanceType: t2.micro
       KeyName: MANDEEP-KEY  # Replace with your actual EC2 key pair name
-      ImageId: ami-0d68d8cc09feec3b1  # Ensure this is a valid AMI for your region (ap-south-1)
+      ImageId: ami-0d68d8cc09feec3b1  # Ensure this is a valid AMI for your region
       SecurityGroups:
-        - Ref: MyNewSecurityGroup  # Reference the new security group
-      SubnetId: subnet-0b35aad6e0809e70a  # Ensure this is a valid subnet ID in your VPC
+        - Ref: MyNewSecurityGroup  # Reference the existing security group
+      SubnetId: subnet-0b35aad6e0809e70a  # Use your provided subnet ID
       NetworkInterfaces:
         - AssociatePublicIpAddress: true  # Ensure public IP is assigned
           DeviceIndex: '0'
