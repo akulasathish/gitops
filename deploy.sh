@@ -1,7 +1,7 @@
 #!/bin/bash
 
 STACK_NAME="simple-html-app-stack"
-AWS_REGION="ap-south-1"
+AWS_REGION="ap-south-1"  # Updated region to ap-south-1
 
 # Check if the stack exists and delete it if necessary
 aws cloudformation describe-stacks --stack-name $STACK_NAME --region $AWS_REGION > /dev/null 2>&1
@@ -18,7 +18,7 @@ fi
 echo "Creating CloudFormation stack $STACK_NAME..."
 aws cloudformation create-stack \
   --stack-name $STACK_NAME \
-  --template-body file://ece-infra.yaml \
+  --template-body file://ec2-infra.yaml \
   --capabilities CAPABILITY_IAM \
   --region $AWS_REGION
 
@@ -35,6 +35,6 @@ echo "EC2 instance IP: $INSTANCE_IP"
 
 # Deploy HTML to EC2
 echo "Deploying HTML to EC2 instance with IP: $INSTANCE_IP"
-scp -i your-ec2-key.pem -o StrictHostKeyChecking=no index.html ec2-user@$INSTANCE_IP:/var/www/html/index.html
+scp -i my-key.pem -o StrictHostKeyChecking=no index.html ec2-user@$INSTANCE_IP:/var/www/html/index.html
 
 echo "Deployment complete."
