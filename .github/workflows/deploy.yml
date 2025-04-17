@@ -1,55 +1,40 @@
-name: Deploy EC2 Infrastructure with CloudFormation
+#!/bin/bash
 
-on:
-  push:
-    branches:
-      - main  # Trigger this action on pushing to the 'main' branch
+STACK_NAME="simple-html-app-stack"
+AWS_REGION="ap-south-1"  # Updated region to ap-south-1
 
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
+# Check if the stack exists and delete it if necessary
+aws cloudformation describe-stacks --stack-name $STACK_NAME --region $AWS_REGION > /dev/null 2>&1
+if [ $? -eq 0 ]; then
+  echo "Stack $STACK_NAME exists. Deleting the stack..."
+  aws cloudformation delete-stack --stack-name $STACK_NAME --region $AWS_REGION
+  echo "Waiting for stack deletion to complete..."
+  aws cloudformation wait stack-delete-complete --stack-name $STACK_NAME --region $AWS_REGION
+else
+  echo "Stack $STACK_NAME does not exist. Proceeding to creation."
+fi
 
-    steps:
-      # Checkout the code
-      - name: Checkout code
-        uses: actions/checkout@v2
+# Create CloudFormation stack to launch EC2
+echo "Creating CloudFormation stack $STACK_NAME..."
+aws cloudformation create-stack \
+  --stack-name $STACK_NAME \
+  --template-body file://ece-infra.yaml \
+  --capabilities CAPABILITY_IAM \
+  --region $AWS_REGION
 
-      # Set up AWS CLI with IAM credentials
-      - name: Set up AWS CLI
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1  # Change this to your region
+# Wait for stack creation to complete
+echo "Waiting for stack creation to complete..."
+aws cloudformation wait stack-create-complete --stack-name $STACK_NAME --region $AWS_REGION
 
-      # Create CloudFormation stack to launch EC2
-      - name: Create CloudFormation Stack
-        run: |
-          aws cloudformation create-stack \
-            --stack-name simple-html-app-stack \
-            --template-body file://ec2-infrastructure.yml \
-            --capabilities CAPABILITY_IAM
+# Retrieve EC2 instance details
+INSTANCE_IP=$(aws cloudformation describe-stacks \
+  --stack-name $STACK_NAME \
+  --query "Stacks[0].Outputs[?OutputKey=='EC2InstancePublicIP'].OutputValue" \
+  --output text --region $AWS_REGION)
+echo "EC2 instance IP: $INSTANCE_IP"
 
-      # Wait for stack creation to complete
-      - name: Wait for Stack to be created
-        run: |
-          aws cloudformation wait stack-create-complete --stack-name simple-html-app-stack
+# Deploy HTML to EC2
+echo "Deploying HTML to EC2 instance with IP: $INSTANCE_IP"
+scp -i your-ec2-key.pem -o StrictHostKeyChecking=no index.html ec2-user@$INSTANCE_IP:/var/www/html/index.html
 
-      # Retrieve EC2 instance details
-      - name: Get EC2 Instance Public IP
-        run: |
-          INSTANCE_IP=$(aws cloudformation describe-stacks \
-            --stack-name simple-html-app-stack \
-            --query "Stacks[0].Outputs[?OutputKey=='EC2InstancePublicIP'].OutputValue" \
-            --output text)
-          echo "EC2 instance IP: $INSTANCE_IP"
-
-      # Deploy HTML to EC2
-      - name: Deploy HTML to EC2
-        run: |
-          INSTANCE_IP=$(aws cloudformation describe-stacks \
-            --stack-name simple-html-app-stack \
-            --query "Stacks[0].Outputs[?OutputKey=='EC2InstancePublicIP'].OutputValue" \
-            --output text)
-          echo "Deploying to EC2 instance with IP: $INSTANCE_IP"
-          scp -i your-ec2-key.pem -o StrictHostKeyChecking=no index.html ec2-user@$INSTANCE_IP:/var/www/html/index.html
+echo "Deployment complete."
