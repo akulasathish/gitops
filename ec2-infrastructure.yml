@@ -1,55 +1,35 @@
-name: Deploy EC2 Infrastructure with CloudFormation
+AWSTemplateFormatVersion: '2010-09-09'
+Resources:
 
-on:
-  push:
-    branches:
-      - main  # Trigger this action on pushing to the 'main' branch
+  # EC2 Instance in your existing VPC and Subnet
+  MyEC2Instance:
+    Type: 'AWS::EC2::Instance'
+    Properties:
+      InstanceType: t2.micro
+      KeyName: MANDEEP-KEY  # Replace with your actual EC2 key pair name
+      ImageId: ami-0d68d8cc09feec3b1  # Ensure this is a valid AMI for your region
+      SecurityGroups:
+        - Ref: MySecurityGroup
+      SubnetId: subnet-0b35aad6e0809e70a  # Use your provided subnet ID
+      Tags:
+        - Key: Name
+          Value: SimpleHTMLApp
 
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
+  # Security Group for the EC2 instance
+  MySecurityGroup:
+    Type: 'AWS::EC2::SecurityGroup'
+    Properties:
+      GroupDescription: Enable HTTP access on port 80
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
 
-    steps:
-      # Checkout the code
-      - name: Checkout code
-        uses: actions/checkout@v2
-
-      # Set up AWS CLI with IAM credentials
-      - name: Set up AWS CLI
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1  # Change this to your region
-
-      # Create CloudFormation stack to launch EC2
-      - name: Create CloudFormation Stack
-        run: |
-          aws cloudformation create-stack \
-            --stack-name simple-html-app-stack \
-            --template-body file://ec2-infrastructure.yml \
-            --capabilities CAPABILITY_IAM
-
-      # Wait for stack creation to complete
-      - name: Wait for Stack to be created
-        run: |
-          aws cloudformation wait stack-create-complete --stack-name simple-html-app-stack
-
-      # Retrieve EC2 instance details
-      - name: Get EC2 Instance Public IP
-        run: |
-          INSTANCE_IP=$(aws cloudformation describe-stacks \
-            --stack-name simple-html-app-stack \
-            --query "Stacks[0].Outputs[?OutputKey=='EC2InstancePublicIP'].OutputValue" \
-            --output text)
-          echo "EC2 instance IP: $INSTANCE_IP"
-
-      # Deploy HTML to EC2
-      - name: Deploy HTML to EC2
-        run: |
-          INSTANCE_IP=$(aws cloudformation describe-stacks \
-            --stack-name simple-html-app-stack \
-            --query "Stacks[0].Outputs[?OutputKey=='EC2InstancePublicIP'].OutputValue" \
-            --output text)
-          echo "Deploying to EC2 instance with IP: $INSTANCE_IP"
-          scp -i your-ec2-key.pem -o StrictHostKeyChecking=no index.html ec2-user@$INSTANCE_IP:/var/www/html/index.html
+Outputs:
+  EC2InstancePublicIP:
+    Description: 'Public IP of the EC2 instance'
+    Value: !GetAtt MyEC2Instance.PublicIp
+  WebsiteURL:
+    Value: !Sub 'http://${MyEC2Instance.PublicDnsName}'
+    Description: 'URL to access the HTML app on EC2'
