@@ -11,6 +11,9 @@ Resources:
       SecurityGroups:
         - Ref: MySecurityGroup
       SubnetId: subnet-0b35aad6e0809e70a  # Use your provided subnet ID
+      NetworkInterfaces:
+        - AssociatePublicIpAddress: true  # Ensure public IP is assigned
+          DeviceIndex: '0'
       Tags:
         - Key: Name
           Value: SimpleHTMLApp
@@ -22,9 +25,9 @@ Resources:
       GroupDescription: Enable HTTP access on port 80
       SecurityGroupIngress:
         - IpProtocol: tcp
-          FromPort: 80
-          ToPort: 80
-          CidrIp: 0.0.0.0/0
+          FromPort: '80'
+          ToPort: '80'
+          CidrIp: '0.0.0.0/0'
 
 Outputs:
   EC2InstancePublicIP:
