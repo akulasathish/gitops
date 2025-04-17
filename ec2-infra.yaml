@@ -1,19 +1,15 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Resources:
 
-  # EC2 Instance with existing security group
   MyEC2Instance:
     Type: 'AWS::EC2::Instance'
     Properties:
       InstanceType: t2.micro
-      KeyName: MANDEEP-KEY  # Replace with your actual EC2 key pair name
-      ImageId: ami-0d68d8cc09feec3b1  # Ensure this is a valid AMI for your region
+      KeyName: MANDEEP-KEY
+      ImageId: ami-0d68d8cc09feec3b1
       SecurityGroupIds:
-        - "sg-08bdfc852e142b299"  # Existing Security Group ID
-      SubnetId: subnet-0b35aad6e0809e70a  # Use your provided subnet ID
-      NetworkInterfaces:
-        - AssociatePublicIpAddress: true  # Ensure public IP is assigned
-          DeviceIndex: '0'
+        - "sg-08bdfc852e142b299"
+      SubnetId: subnet-0b35aad6e0809e70a
       Tags:
         - Key: Name
           Value: SimpleHTMLApp
