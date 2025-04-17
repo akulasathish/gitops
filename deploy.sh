@@ -36,18 +36,23 @@ echo "EC2 instance IP: $INSTANCE_IP"
 # Deploy HTML to EC2
 echo "Deploying HTML to EC2 instance with IP: $INSTANCE_IP"
 
-# SSH into EC2 and create directory if it doesn't exist, then copy index.html
+# SSH into EC2 and configure httpd
 ssh -i MANDEEP-KEY.pem -o StrictHostKeyChecking=no ec2-user@$INSTANCE_IP << EOF
+  # Update system and install httpd (Apache HTTP Server)
+  sudo yum update -y
+  sudo yum install -y httpd
+  
+  # Start and enable httpd
+  sudo systemctl start httpd
+  sudo systemctl enable httpd
+  
   # Create directory and set permissions
   sudo mkdir -p /var/www/html
   sudo chown ec2-user:ec2-user /var/www/html
   sudo chmod 755 /var/www/html
-
+  
   # Download and place index.html
   sudo wget https://raw.githubusercontent.com/akulasathish/gitops/main/index.html -O /var/www/html/index.html
-  sudo systemctl start httpd
-  sudo systemctl enable httpd
 EOF
 
 echo "Deployment complete."
-
