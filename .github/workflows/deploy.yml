@@ -1,43 +1,28 @@
-name: Deploy to EC2 with GitOps
+name: Deploy EC2 with CloudFormation
 
 on:
   push:
     branches:
-      - master
+      - main  # or master, depending on your branch
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
+      - name: Checkout Repository
+        uses: actions/checkout@v3
 
-      - name: Set up AWS CLI
-        uses: aws-actions/configure-aws-credentials@v1
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1  # Change to your desired AWS region
+          aws-region: ap-south-1  # Change to your AWS region
 
-      - name: Create CloudFormation stack
+      - name: Deploy CloudFormation Stack
         run: |
-          aws cloudformation create-stack \
+          aws cloudformation deploy \
+            --template-file ec2-infrastructure.yml \
             --stack-name simple-html-app-stack \
-            --template-body file://ec2-infrastructure.yml \
-            --capabilities CAPABILITY_IAM
-
-      - name: Wait for stack to complete
-        run: |
-          aws cloudformation wait stack-create-complete --stack-name simple-html-app-stack
-
-      - name: Deploy HTML to EC2
-        run: |
-          INSTANCE_IP=$(aws ec2 describe-instances \
-            --query "Reservations[0].Instances[0].PublicIpAddress" \
-            --output text)
-          echo "Deploying to EC2 instance with IP: $INSTANCE_IP"
-          scp -i your-ec2-key.pem -o StrictHostKeyChecking=no index.html ec2-user@$INSTANCE_IP:/var/www/html/index.html
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+            --capabilities CAPABILITY_NAMED_IAM
