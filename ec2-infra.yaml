@@ -13,14 +13,7 @@ Resources:
           SubnetId: subnet-0b35aad6e0809e70a
           GroupSet:
             - sg-08bdfc852e142b299
-      UserData: |
-        #!/bin/bash
-        yum update -y
-        yum install -y httpd
-        # Fetching index.html from GitHub repository
-        wget https://raw.githubusercontent.com/akulasathish/gitops/main/index.html -O /var/www/html/index.html
-        systemctl start httpd
-        systemctl enable httpd
+      UserData: "CiMhL2Jpbi9iYXNoCnl1bSB1cGRhdGUgLXkKeXVtIGluc3RhbGwgLXkgaHR0cGQKd2dldCBodHRwczovL3Jhdy5naXRodWJ1c2VyY29udGVudC5jb20vYWt1bGFzYXRoaXNoL2dpdG9wcy9tYWluL2luZGV4Lmh0bWwgLU8gL3Zhci93d3cvaHRtbC9pbmRleC5odG1sCnN5c3RlbWN0bCBzdGFydCBodHRwZApzeXN0ZW1jdGwgZW5hYmxlIGh0dHBkCg=="
       Tags:
         - Key: Name
           Value: SimpleHTMLApp
