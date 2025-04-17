@@ -35,6 +35,6 @@ echo "EC2 instance IP: $INSTANCE_IP"
 
 # Deploy HTML to EC2
 echo "Deploying HTML to EC2 instance with IP: $INSTANCE_IP"
-scp -i my-key.pem -o StrictHostKeyChecking=no index.html ec2-user@$INSTANCE_IP:/var/www/html/index.html
+scp -i MANDEEP-KEY.pem -o StrictHostKeyChecking=no index.html ec2-user@$INSTANCE_IP:/var/www/html/index.html
 
 echo "Deployment complete."
